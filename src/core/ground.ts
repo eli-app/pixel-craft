@@ -12,26 +12,24 @@ type GroundSpriteData = {
 	col: number
 }
 
-const isAdjacentToWater = (perlin: number[][], row: number, col: number) => {
+const isAdjacentToWater = (xPosTile: number, yPosTile: number) => {
+	const perlinArea = getPerlinAroundCell(xPosTile, yPosTile)
+
 	const directions = [
-		[-1, -1],
-		[-1, 0],
-		[-1, 1],
-		[0, -1],
+		[0, 0],
 		[0, 1],
-		[1, -1],
+		[0, 2],
 		[1, 0],
-		[1, 1]
+		[1, 2],
+		[2, 0],
+		[2, 1],
+		[2, 2]
 	]
 
-	for (const [dRow, dCol] of directions) {
-		const newRow = row + dRow
-		const newCol = col + dCol
-
-		if (newRow >= 0 && newRow < perlin.length && newCol >= 0 && newCol < perlin[0].length) {
-			if (isTileWater(perlin[newRow][newCol])) {
-				return true
-			}
+	// Looping through all adjacent tiles to see if any of them is water
+	for (const [row, col] of directions) {
+		if (isTileWater(perlinArea[row][col])) {
+			return true
 		}
 	}
 
@@ -65,7 +63,7 @@ export const createGroundSprite = (data: GroundSpriteData) => {
 			}
 
 			sprite.texture = water
-		} else if (isAdjacentToWater(perlin, row, col)) {
+		} else if (isAdjacentToWater(xPosTile, yPosTile)) {
 			sprite.texture = ASSETS.BLOCKS.animations['sand'][0]
 		}
 	}
