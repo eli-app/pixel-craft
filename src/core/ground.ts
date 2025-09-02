@@ -12,7 +12,7 @@ type GroundSpriteData = {
 	col: number
 }
 
-const isAdjacentToWater = (xPosTile: number, yPosTile: number) => {
+export const isAdjacentToWater = (xPosTile: number, yPosTile: number) => {
 	const perlinArea = getPerlinAroundCell(xPosTile, yPosTile)
 
 	const directions = [
