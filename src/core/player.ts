@@ -25,6 +25,8 @@ const PLAYER_FRAME_LENGTH = 3
 const DEFAULT_SPEED = 1
 export let PLAYER_SPEED = DEFAULT_SPEED
 const WATER_SPEED_REDUCTION = 0.6
+const SPRINT_MULTIPLIER = 5
+let sprintHeld = false
 // Diffrent water position if comming in or out from top or bottom of lakes since top you see the side of the ground but not on the bottom of lakes there for we move the player diffrently
 const PLAYER_WATER_Y_POS_TOP = TILE_HEIGHT
 const PLAYER_WATER_Y_POS_BOTTOM = TILE_HEIGHT_HALF
@@ -134,6 +136,14 @@ export const createPlayer = (world: Container) => {
 
 const isAllowedKey = (key: string): key is AllowedKeys => {
 	return allowedKeys.includes(key as AllowedKeys)
+}
+
+export const registerSprint = (key: string) => {
+	if (key === 'Shift') sprintHeld = true
+}
+
+export const removeSprint = (key: string) => {
+	if (key === 'Shift') sprintHeld = false
 }
 
 export const registerPlayerMovement = (key: string) => {
@@ -404,7 +414,8 @@ export const movePlayerPosition = (player: Sprite, world: Container, ticker: Tic
 	// Put player in the correct chunk so zIndex will work on surface items
 	putPlayerInChunk(player)
 	const allowedDirection = handlePlayerBounds(player)
-	const distance = ticker.deltaTime * PLAYER_SPEED
+	const boost = sprintHeld && !playerIsInWater ? SPRINT_MULTIPLIER : 1
+	const distance = ticker.deltaTime * PLAYER_SPEED * boost
 
 	if (
 		(playerMovementKeys.has('w') || playerMovementKeys.has('ArrowUp')) &&

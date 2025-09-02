@@ -14,6 +14,8 @@ import {
 	isPlayerStopping,
 	movePlayerPosition,
 	putPlayerInChunk,
+	registerSprint,
+	removeSprint,
 	registerPlayerMovement,
 	removePlayerMovement,
 	setPlayerAnimation
@@ -76,6 +78,16 @@ const init = async () => {
 		handleWindowResize(world, ground, surface)
 
 		view = new Rectangle(0, 0, window.innerWidth, window.innerHeight)
+	})
+
+	window.addEventListener('keydown', (e) => {
+		registerSprint(e.key)
+		registerPlayerMovement(e.key)
+	})
+
+	window.addEventListener('keyup', (e) => {
+		removeSprint(e.key)
+		removePlayerMovement(e.key)
 	})
 }
 
