@@ -5,7 +5,6 @@ import { isoPosToWorldPos, TILE_HEIGHT, TILE_HEIGHT_HALF, TILE_WIDTH_HALF } from
 import { ASSETS } from './assets'
 import { SEED } from '../lib/utils/perlinNoise'
 import { isTileWater } from './water'
-import { isAdjacentToWater } from './ground'
 import { Chunk } from '../types/tiles'
 
 type VegetationSpriteData = {
@@ -99,7 +98,6 @@ export const createVegetationSprite = (data: VegetationSpriteData) => {
 	const { xPosTile, yPosTile, perlin, row, col } = data
 
 	if (isTileWater(perlin[row][col])) return null
-	if (isAdjacentToWater(xPosTile, yPosTile)) return null
 
 	const x = xPosTile
 	const y = yPosTile + TILE_HEIGHT * 0.75
