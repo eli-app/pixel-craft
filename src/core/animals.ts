@@ -1,34 +1,24 @@
-// @ts-ignore
-import { Noise } from 'noisejs'
 import { Sprite } from 'pixi.js'
-import { isoPosToWorldPos, TILE_HEIGHT, TILE_HEIGHT_HALF, TILE_WIDTH_HALF } from './tiles'
 import { ASSETS } from './assets'
-import { SEED } from '../lib/utils/perlinNoise'
-import { isTileWater } from './water'
-import { Chunk } from '../types/tiles'
+import { isoPosToWorldPos, TILE_HEIGHT, TILE_HEIGHT_HALF } from './tiles'
 
-type AnimalSpriteData = {
-	xPosTile: number
-	yPosTile: number
-	perlin: number[][]
-	row: number
-	col: number
+// Mapping: logiskt namn → frame-name i spritesheet
+const ANIMAL_FRAMES: Record<string, string> = {
+	sheep: 'sheepy.png'
 }
 
-const ANIMAL_NOISE = {
-	'sheepy.png': 0.05
-} as const
-
-const ANIMAL_DENSITY = 0.02
-
-// Lista på djur som räknas som "collidable"
-const collisions = ['sheepy.png']
-
-export const hasAnimalCollisions = (animal: Sprite) => {
-	return collisions.includes(animal.texture.label ?? '')
+// Om du vill kan du ha densitet för att inte alla spawnar
+const ANIMAL_DENSITY: Record<string, number> = {
+	sheep: 0.05
 }
 
-// Deterministisk hash för slump utan att bli helt random
+export type AnimalSpriteData = {
+	xTile: number
+	yTile: number
+	seed: number
+}
+
+// Funktion för att deterministiskt bestämma spawn
 const deterministicHash = (x: number, y: number, seed: number) => {
 	const PRIME_X = 374761393
 	const PRIME_Y = 668265263
@@ -39,70 +29,32 @@ const deterministicHash = (x: number, y: number, seed: number) => {
 	h = (h ^ (h >> 13)) * MIXER
 	h = h ^ (h >> 16)
 
-	return (h >>> 0) / 0xffffffff // normaliserat till [0,1)
+	return (h >>> 0) / 0xffffffff
 }
 
-// Enkel Perlin-baserad djurplacering
-const generateAnimalNoise = (x: number, y: number) => {
-	const noise = new Noise(SEED)
-	return noise.perlin2(x * 0.05, y * 0.05)
-}
+// Skapa sprite
+export const createAnimalSprite = (
+	data: AnimalSpriteData,
+	animalType: keyof typeof ANIMAL_FRAMES
+) => {
+	const { xTile, yTile, seed } = data
+	const shouldRender = deterministicHash(xTile, yTile, seed)
 
-// Bestäm vilken djurtextur som ska användas
-const getTextureFromPerlin = (perlin: number, x: number, y: number) => {
-	let textureKey = ''
-	const shouldRender = deterministicHash(x, y, SEED)
+	if (shouldRender >= ANIMAL_DENSITY[animalType]) return null
 
-	for (const [key, value] of Object.entries(ANIMAL_NOISE)) {
-		if (perlin >= value && shouldRender < ANIMAL_DENSITY) {
-			textureKey = key
-		}
-	}
+	const frameName = ANIMAL_FRAMES[animalType]
+	const texture = ASSETS.ANIMALS?.textures[frameName]
+	if (!texture) return null
 
-	if (!textureKey || !ASSETS.ANIMALS) return null
-	return ASSETS.ANIMALS.textures[textureKey] // Nu fungerar det direkt
-}
-
-// Konvertera positionskoordinater
-export const convertAnimalPosToGround = (x: number, y: number) => {
-	const newX = x - TILE_WIDTH_HALF
-	const newY = y - TILE_HEIGHT * 0.75
-	return { x: newX, y: newY }
-}
-
-// Skapar Pixi Sprite för djur
-export const createAnimalSprite = (data: AnimalSpriteData) => {
-	const { xPosTile, yPosTile, perlin, row, col } = data
-
-	// Djur vill kanske inte stå på vatten
-	if (isTileWater(perlin[row][col])) return null
-
-	const x = xPosTile
-	const y = yPosTile + TILE_HEIGHT * 0.75
-	const worldPos = isoPosToWorldPos(xPosTile, yPosTile)
-
-	const animalNoise = generateAnimalNoise(worldPos.x, worldPos.y)
-	const textureData = getTextureFromPerlin(animalNoise, xPosTile, yPosTile)
-
-	if (!textureData) return null
-
-	const labelPos = convertAnimalPosToGround(x, y)
+	const worldPos = isoPosToWorldPos(xTile, yTile)
 
 	const sprite = new Sprite({
-		texture: textureData,
-		width: textureData.width,
-		height: textureData.height,
-		x: x,
-		y: y,
+		texture,
+		x: worldPos.x,
+		y: worldPos.y + TILE_HEIGHT * 0.75,
 		anchor: { x: 0.5, y: 1 },
-		label: `${labelPos.x}_${labelPos.y}`,
-		zIndex: labelPos.y + TILE_HEIGHT_HALF
+		zIndex: worldPos.y + TILE_HEIGHT_HALF
 	})
 
 	return sprite
-}
-
-// Hämta djur från ett Chunk
-export const getAnimalFromGround = (chunk: Chunk, label: string) => {
-	return chunk.surface?.getChildByLabel(label)
 }

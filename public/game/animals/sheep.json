@@ -1,37 +1,39 @@
 {
 	"frames": {
-		"sheep.png": {
+		"sheepy.png": {
 			"frame": {
 				"x": 0,
 				"y": 0,
-				"w": 32,
-				"h": 32
+				"w": 188,
+				"h": 246
 			},
 			"rotated": false,
-			"trimmed": false,
+			"trimmed": true,
 			"spriteSourceSize": {
-				"x": 0,
-				"y": 0,
-				"w": 32,
-				"h": 32
+				"x": 2,
+				"y": 4,
+				"w": 188,
+				"h": 246
 			},
 			"sourceSize": {
-				"w": 32,
-				"h": 32
+				"w": 192,
+				"h": 256
 			},
 			"pivot": {
 				"x": 0.5,
 				"y": 0.5
 			}
-		},
-
-		"meta": {
-			"image": "sheep.png",
-			"size": {
-				"w": 192,
-				"h": 256
-			},
-			"scale": "1"
 		}
+	},
+	"meta": {
+		"app": "http://free-tex-packer.com",
+		"version": "0.6.7",
+		"image": "sheep.png",
+		"format": "RGBA8888",
+		"size": {
+			"w": 188,
+			"h": 246
+		},
+		"scale": 1
 	}
 }
