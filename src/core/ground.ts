@@ -65,6 +65,8 @@ export const createGroundSprite = (data: GroundSpriteData) => {
 			}
 
 			sprite.texture = water
+		} else if (isAdjacentToWater(perlin, row, col)) {
+			sprite.texture = ASSETS.BLOCKS.animations['sand'][0]
 		}
 	}
 
