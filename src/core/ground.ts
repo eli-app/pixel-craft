@@ -12,6 +12,32 @@ type GroundSpriteData = {
 	col: number
 }
 
+const isAdjacentToWater = (perlin: number[][], row: number, col: number) => {
+	const directions = [
+		[-1, -1],
+		[-1, 0],
+		[-1, 1],
+		[0, -1],
+		[0, 1],
+		[1, -1],
+		[1, 0],
+		[1, 1]
+	]
+
+	for (const [dRow, dCol] of directions) {
+		const newRow = row + dRow
+		const newCol = col + dCol
+
+		if (newRow >= 0 && newRow < perlin.length && newCol >= 0 && newCol < perlin[0].length) {
+			if (isTileWater(perlin[newRow][newCol])) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 export const createGroundSprite = (data: GroundSpriteData) => {
 	const { xPosTile, yPosTile, perlin, row, col } = data
 
