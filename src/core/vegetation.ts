@@ -19,13 +19,14 @@ const VEGETATION_NOISE = {
 	'dasiy.png': 0.08,
 	'oak-tree.png': 0.05,
 	'tall-grass.png': 0.2,
-	'short-grass.png': 0.3
+	'short-grass.png': 0.3,
+	'sheep.png': 0.3
 } as const
 
 const TREE_DENSITY = 0.03
 const PLANT_DENSITY = 0.1
 
-const collisions = ['oak-tree.png']
+const collisions = ['oak-tree.png', 'sheep.png']
 
 export const hasVegetationCollisions = (vegetation: Sprite) => {
 	return collisions.includes(vegetation.texture.label ?? '')

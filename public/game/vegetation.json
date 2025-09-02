@@ -96,6 +96,30 @@
 				"x": 0.5,
 				"y": 0.5
 			}
+		},
+		"sheep.png": {
+			"frame": {
+				"x": 0,
+				"y": 280,
+				"w": 32,
+				"h": 32
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 22,
+				"h": 22
+			},
+			"sourceSize": {
+				"w": 22,
+				"h": 22
+			},
+			"pivot": {
+				"x": 0.5,
+				"y": 0.5
+			}
 		}
 	},
 	"meta": {
