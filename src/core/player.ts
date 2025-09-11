@@ -27,7 +27,6 @@ export let PLAYER_SPEED = DEFAULT_SPEED
 const WATER_SPEED_REDUCTION = 0.6
 const SPRINT_MULTIPLIER = 5
 let sprintHeld = false
-// Diffrent water position if comming in or out from top or bottom of lakes since top you see the side of the ground but not on the bottom of lakes there for we move the player diffrently
 const PLAYER_WATER_Y_POS_TOP = TILE_HEIGHT
 const PLAYER_WATER_Y_POS_BOTTOM = TILE_HEIGHT_HALF
 let playerIsInWater = false
@@ -45,6 +44,8 @@ const animationSpeed = 0.1
 
 let playerChunkKey = ''
 
+const normalizeKey = (key: string) => (key.length === 1 ? key.toLowerCase() : key)
+
 const getVerticleDirection = (key: string) => {
 	if (key === 'w' || key === 'ArrowUp') return 'up'
 	if (key === 's' || key === 'ArrowDown') return 'down'
@@ -58,12 +59,10 @@ const getHorizontalDirection = (key: string) => {
 }
 
 const getPlayerAnimationKey = (keys: Set<string>) => {
-	// When player is created there is no keys that are active there for the early check
 	if (keys.size === 0 && playerIsInWater) {
 		return 'water-' + animationKey
 	}
 
-	// We only want to use the first and second key that is active if a users has three keys active we ignore it
 	if (keys.size > 2 || keys.size === 0) return animationKey
 
 	const verticalKeys = ['w', 's', 'ArrowUp', 'ArrowDown']
@@ -82,13 +81,11 @@ const getPlayerAnimationKey = (keys: Set<string>) => {
 
 	let key = ''
 
-	// Handle 1 key
 	if (keys.size === 1) {
 		if (vertical) key = `${vertical}-center`
 		if (horizontal) key = `${horizontal}-${horizontal}`
 	}
 
-	// In the format of the spritesheet naming the verticle direction always comes first
 	if (vertical && horizontal) {
 		key = `${vertical}-${horizontal}`
 	}
@@ -117,7 +114,7 @@ export const createPlayer = (world: Container) => {
 	const { x, y } = centerPlayerToCenterTile()
 
 	const player = new Sprite()
-	player.anchor.set(0, 1) // Left Bottom
+	player.anchor.set(0, 1)
 	player.label = 'player'
 	player.x = x
 	player.y = y
@@ -147,7 +144,8 @@ export const removeSprint = (key: string) => {
 }
 
 export const registerPlayerMovement = (key: string) => {
-	if (isAllowedKey(key) && !playerMovementKeys.has(key)) {
+	const k = normalizeKey(key)
+	if (isAllowedKey(k) && !playerMovementKeys.has(k)) {
 		const opposites: Record<string, string> = {
 			w: 's',
 			s: 'w',
@@ -159,17 +157,19 @@ export const registerPlayerMovement = (key: string) => {
 			ArrowRight: 'ArrowLeft'
 		}
 
-		if (playerMovementKeys.has(opposites[key])) {
-			removePlayerMovement(opposites[key])
+		const opposite = opposites[k]
+		if (opposite && playerMovementKeys.has(opposite)) {
+			removePlayerMovement(opposite)
 		}
 
-		playerMovementKeys.add(key)
+		playerMovementKeys.add(k)
 	}
 }
 
 export const removePlayerMovement = (key: string) => {
-	if (isAllowedKey(key) && playerMovementKeys.has(key)) {
-		playerMovementKeys.delete(key)
+	const k = normalizeKey(key)
+	if (isAllowedKey(k) && playerMovementKeys.has(k)) {
+		playerMovementKeys.delete(k)
 	}
 }
 
@@ -225,12 +225,10 @@ const getAllActivePlayerTiles = (chunk: Chunk, player: Sprite) => {
 	const ground = chunk.ground?.children ?? []
 	const tiles: ContainerChild[] = []
 
-	// We only want to check if the bottom of the player is in a tile since there is where the feet are
 	for (const tile of ground) {
 		const cx = tile.x + TILE_WIDTH_HALF
 		const cy = tile.y + TILE_HEIGHT_HALF
 
-		// The anchor is set to bottom left of the player there for we dont have to add ane width or height
 		const dx = Math.abs(player.x - cx) / TILE_WIDTH_HALF
 		const dy = Math.abs(player.y - cy) / TILE_HEIGHT_HALF
 
@@ -245,7 +243,6 @@ const getAllActivePlayerTiles = (chunk: Chunk, player: Sprite) => {
 }
 
 const isPlayerBehindItem = (item: ContainerChild, groundTile: ContainerChild, player: Sprite) => {
-	// To place an item i.e vegetation on a tile but still allow the assets to display above the tile we set the anchor at bottom center
 	const itemLeft = item.x - item.width / 2
 	const itemRight = item.x + item.width / 2
 	const itemTop = item.y - item.height
@@ -286,14 +283,12 @@ const handlePlayerBounds = (player: Sprite) => {
 	const keys = getVisibleChunkKeys(row, col)
 	const chunks = getVisibleChunks(keys)
 
-	const activeChunk = chunks.get(`${col}_${row}`)! // There will always be this chunk since this is the keys are based on
+	const activeChunk = chunks.get(`${col}_${row}`)!
 	const currentTiles = getAllActivePlayerTiles(activeChunk, player)
 
-	// Including the chunks around the chunk that player is, since an surface item can have a part o fit covering in to a differnt chunk
 	for (const [_, chunk] of chunks) {
 		if (!chunk.ground) continue
 
-		// Moving backwords since the actual first index is the furthest away visualy
 		const ground = chunk.ground.children
 		for (let i = ground.length - 1; i >= 0; i--) {
 			const tile = ground[i]
@@ -355,13 +350,6 @@ export const movePlayerTo = (x: number, y: number, world: Container, player: Spr
 	player.x -= xDiff
 }
 
-/**
- * When in water top line hits before bottom meaning nort collision move player
- * When in water and bottom line hits before meaning soulth collision move player
- * When on ground and bottom line hits before meaing north entring water move player
- * When on ground and top line hits first meaning soulth entering water move player
- */
-
 const isPlayerInWater = (player: Sprite) => {
 	let isWater: Record<string, any> = {}
 
@@ -409,9 +397,6 @@ export const handlePlayerInWater = (player: Sprite, world: Container) => {
 }
 
 export const movePlayerPosition = (player: Sprite, world: Container, ticker: Ticker) => {
-	// We invert the momvent on the player to keep in in the center
-
-	// Put player in the correct chunk so zIndex will work on surface items
 	putPlayerInChunk(player)
 	const allowedDirection = handlePlayerBounds(player)
 	const boost = sprintHeld && !playerIsInWater ? SPRINT_MULTIPLIER : 1
@@ -451,7 +436,6 @@ export const movePlayerPosition = (player: Sprite, world: Container, ticker: Tic
 
 	handlePlayerInWater(player, world)
 
-	// To always be behind or infront of the right tree we have to adjust the zIndex depending on y axis
 	player.zIndex = player.y
 
 	animationTimer += ticker.deltaTime / 60
